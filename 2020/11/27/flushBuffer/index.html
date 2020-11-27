@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="John Doe">
+
+
+
+
+
+<title>FlushBuffer | Hexo</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+    
+
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">Xiateapu&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">Xiateapu&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+        <div class="main">
+            <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">FlushBuffer</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">John Doe</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">November 27, 2020&nbsp;&nbsp;23:43:54</a>
+                        </span>
+                    
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>一次真实的踩坑记录，其中的结论是通过查阅资料+阅读源码后得出的结论，如果有错误的还请各位帮忙指出来。</p>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>项目中需要将数据分析结果构造成excel并返回，使用esayExcel导出书写代码如下（已抹去敏感信息，并简化代码实现）:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(value = &quot;/download&quot;, method = RequestMethod.GET)</span></span><br><span class="line"><span class="meta">@ResponseBody</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Response&lt;Boolean&gt; <span class="title">download</span><span class="params">(HttpServletResponse response)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    List&lt;ExportData&gt; exportDataList = getResult();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  Set response attribute</span></span><br><span class="line">    response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);</span><br><span class="line">    response.setHeader(<span class="string">&quot;Content-Disposition&quot;</span>, <span class="string">&quot;attachment;filename=&quot;</span> + URLEncoder.encode(<span class="string">&quot;查询结果.xlsx&quot;</span>, <span class="string">&quot;UTF-8&quot;</span>));</span><br><span class="line">    response.flushBuffer();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Set excel data</span></span><br><span class="line">    ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build();</span><br><span class="line">    WriteSheet writeSheet = EasyExcel.writerSheet(<span class="number">0</span>, <span class="string">&quot;查询结果&quot;</span>).head(ExportData.class).build();</span><br><span class="line">    excelWriter.write(exportDataList, writeSheet);</span><br><span class="line">    excelWriter.finish();</span><br><span class="line">    <span class="keyword">return</span> Response.success(<span class="keyword">true</span>).build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>本地测试通过，可以正常下载。</p>
+<p>然而当我发布到测试环境时，出现了一个奇怪的现象：</p>
+<ul>
+<li>当下载rows大于370时可以正常下载，小于370时则不行。</li>
+<li>添加日志观察response内容，发现无法正常下载时，返回的<code>Content-Type</code>为<code>application/json;charset=UTF-8</code></li>
+<li>本地测试时，无论数据量为多少，返回的<code>ContentType</code>都为<code>application/octet-stream</code>，且能正常下载。</li>
+</ul>
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>细心的同学应该能观察到几个现象：</p>
+<ol>
+<li>代码中同时具有<code>setContentType</code>和<code>@ResponseBody</code>，究竟哪个会生效？</li>
+<li>测试环境和本地测试的差异点是什么？</li>
+<li>数据量达到一定量之后，问题会消失，是什么原因?</li>
+</ol>
+<h2 id="ResponseBody与setContentType"><a href="#ResponseBody与setContentType" class="headerlink" title="@ResponseBody与setContentType"></a>@ResponseBody与setContentType</h2><p>关于这两者的作用这里不做累述，如果对于<code>@ResponseBody</code>的原理实现有疑惑的可以参考<a target="_blank" rel="noopener" href="https://www.javazhiyin.com/39785.html">这篇</a>文章。</p>
+<p>那么当两者同时存在的时候，究竟哪个会生效？要解答这个问题，需要先了解两个概念。</p>
+<ol>
+<li>缓冲区：<blockquote>
+<p>服务端在把response提交到客户端之前，会使用一个缓冲区，并向该缓冲区内写入响应头和状态码，当缓冲区满（默认8K）或服务端响应流程即将结束时，会将缓冲区中数据发送给client端。</p>
+</blockquote>
+</li>
+<li>flushBuffer：<blockquote>
+<p>将任何缓冲区内的信息立刻写入客户端，并自动提交response，官方释意如下:</p>
+</blockquote>
+
+<blockquote>
+<p>推断：这里committed是否意味着当前response的结束? 我用postman调用时，如果flushBuffer是会立刻受到结果，但如果用ajax调用，可以等待<a target="_blank" rel="noopener" href="https://www.cnblogs.com/tesky0125/p/4619561.html">readState</a>为4再处理，这样就不会在flushBuffer的时候立刻响应，导致无法处理excel写入的内容。<br>这里的推断正确与否还请各位大佬赐教。</p>
+</blockquote>
+</li>
+</ol>
+<p>明确以上两个概念之后，我们再来探究一下<code>@ResponseBody</code>是如何改写response的header信息的，代码片段如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractMessageConverterMethodProcessor.java</span></span><br><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">writeWithMessageConverters</span><span class="params">(<span class="meta">@Nullable</span> T value, MethodParameter returnType,</span></span></span><br><span class="line"><span class="function"><span class="params">			ServletServerHttpRequest inputMessage, ServletServerHttpResponse outputMessage)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> IOException, HttpMediaTypeNotAcceptableException, HttpMessageNotWritableException </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 这里省略前面的实现</span></span><br><span class="line">              </span><br><span class="line">        <span class="comment">// 从response中查找是否已经设置过Header信息，设置过则直接使用</span></span><br><span class="line">		MediaType selectedMediaType = <span class="keyword">null</span>;</span><br><span class="line">		MediaType contentType = outputMessage.getHeaders().getContentType();</span><br><span class="line">		<span class="keyword">if</span> (contentType != <span class="keyword">null</span> &amp;&amp; contentType.isConcrete()) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">&quot;Found &#x27;Content-Type:&quot;</span> + contentType + <span class="string">&quot;&#x27; in response&quot;</span>);</span><br><span class="line">			&#125;</span><br><span class="line">			selectedMediaType = contentType;</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">// 这里省略后面的实现</span></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到<code>MessageConverters</code>会尝试从response中获取ContentType，如果获取不到，会走默认逻辑填充ContentType。</p>
+<p>而<code>outputMessage.getHeaders().getContentType()</code>的获取逻辑中，并不会直接拿我在download方法中通过<code>setContentType</code>设置的MediaType.APPLICATION_OCTET_STREAM_VALUE，而是使用<code>coyoteResponse</code>中的<code>MimeHeaders</code>。</p>
+<p>继续阅读发现<code>MimeHeaders</code>的写入时机与前文介绍的<code>flushBuffer()</code>方法密不可分，具体写入代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.catalina.connector.OutputBuffer</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doFlush</span><span class="params">(<span class="keyword">boolean</span> realFlush)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (suspended) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            doFlush = <span class="keyword">true</span>;</span><br><span class="line">            <span class="keyword">if</span> (initial) &#123;</span><br><span class="line">                coyoteResponse.sendHeaders();</span><br><span class="line">                initial = <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (cb.remaining() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                flushCharBuffer();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (bb.remaining() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                flushByteBuffer();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            doFlush = <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (realFlush) &#123;</span><br><span class="line">            coyoteResponse.action(ActionCode.CLIENT_FLUSH, <span class="keyword">null</span>);</span><br><span class="line">            <span class="comment">// If some exception occurred earlier, or if some IOE occurred</span></span><br><span class="line">            <span class="comment">// here, notify the servlet with an IOE</span></span><br><span class="line">            <span class="keyword">if</span> (coyoteResponse.isExceptionPresent()) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> ClientAbortException(coyoteResponse.getErrorException());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>从<code>sendHeaders</code>函数继续阅读，比如我当前服务使用的协议是Http11，最后写入<code>MimeHeaders</code>的地方便是<code>Http11Processor.prepareResponse()</code>。</p>
+<p>针对前面提出的问题，可以得出以下结论：</p>
+<ul>
+<li>**当不调用flushBuffer、且缓冲区未满时，<code>@ResponseBody</code>会生效，且将<code>ContentType</code>改写为<code>application/json;charset=UTF-8</code>**，</li>
+</ul>
+<h2 id="测试环境"><a href="#测试环境" class="headerlink" title="测试环境"></a>测试环境</h2><p>按照上述描述，在当前的实现下，应该也不会出现excel无法下载的情况，毕竟我每写完<code>ContentType</code>之后会立刻<code>flushBuffer()</code>，然后再填充excel详情，从现象来看，本地调试是符合预期的，但是测试环境为什么会出问题？</p>
+<p>于是我对测试环境进行了远程Debug，发现了一个重要的问题：测试环境在编译的时候，将一个Filter进行了注入，这个Filter包装了request和response，而在包装类中，<code>response.flushBuffer()</code>的实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">flushBuffer</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (writer != <span class="keyword">null</span>) &#123;</span><br><span class="line">        writer.flush();</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (outputStream != <span class="keyword">null</span>) &#123;</span><br><span class="line">        copier.flush();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此谜题解开，包装类中的flushBuffer只是单纯得刷新了<code>OutputStream</code>或者<code>PrintWriter</code>，而没有对<code>MimeHeaders</code>进行写入。</p>
+<h2 id="数据量问题"><a href="#数据量问题" class="headerlink" title="数据量问题"></a>数据量问题</h2><p>这个问题我没有继续探究，不过从缓冲区大小默认为8K来看，应该是命中了最大缓冲区，并自动flush了。</p>
+<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>这个问题定位下来前前后后花了不少时间，很早就怀疑了是<code>flushBuffer</code>失效的问题，但是由于种种原因导致在进行远程Debug这步上磕磕碰碰。</p>
+<p>其实反过头来想，download接口的实现本身就是有问题的，在明确<code>ContentType</code>的情况下，再加上<code>@ResponseBody</code>的注解有点冗余，这就是业务开发时大量复制粘贴的真实体现。</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>John Doe</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2020/11/27/flushBuffer/">http://example.com/2020/11/27/flushBuffer/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>Do you believe in <strong>DESTINY</strong>?</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/Spring/"># Spring</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+            <a class="next" rel="next" href="/2020/11/26/hello-world/">Hello World</a>
+            
+        </section>
+
+
+    </article>
+</div>
+
+        </div>
+        <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© John Doe | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+</html>
